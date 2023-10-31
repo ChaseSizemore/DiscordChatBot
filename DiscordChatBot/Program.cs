@@ -1,13 +1,57 @@
-// using static DotNetEnv
+using DotNetEnv;
+using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DiscordChatBot.commands;
 
-class Program
+
+namespace DiscordChatBot
 {
-    static void Main(string[] args)
+    internal class Program
     {
-        // Env.Load();
-        // string TOKEN = Env.GetString("TOKEN");
-        // Console.WriteLine(TOKEN);
+        static async Task Main(string[] args)
+        {
+            Env.Load();
+            string TOKEN = Env.GetString("TOKEN");
 
-        Console.WriteLine(Bot.speak());
+            var discordConfig = new DiscordConfiguration()
+            {
+                Intents = DiscordIntents.All, //bot permissions
+                Token = TOKEN,
+                TokenType = TokenType.Bot,
+                AutoReconnect = true, //bot will auto reconnect if it disconnects
+            };
+
+            Client = new DiscordClient(discordConfig);
+
+            Client.Ready += Client_Ready;
+
+            var commandsConfig = new CommandsNextConfiguration()
+            {
+                StringPrefixes = new string[] { "!" },
+                EnableMentionPrefix = true,
+                EnableDms = true,
+                EnableDefaultHelp = false,
+            };
+
+            Commands = Client.UseCommandsNext(commandsConfig);
+            Commands.RegisterCommands<GPTChatCompletion>();
+            Commands.RegisterCommands<TestCommands>();
+
+            await Client.ConnectAsync(); // Connects to the Discord API
+            await Task.Delay(-1); // Prevents the program from closing
+        }
+
+        private static DiscordClient Client { get; set; } 
+        private static CommandsNextExtension Commands { get; set; }
+
+        private static Task Client_Ready(DiscordClient sender, DSharpPlus.EventArgs.ReadyEventArgs e)
+        {
+            return Task.CompletedTask;
+        }
+
+
+
+
+
     }
 }
